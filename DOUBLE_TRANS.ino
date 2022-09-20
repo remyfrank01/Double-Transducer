@@ -7,12 +7,21 @@
 
    https://learn.adafruit.com/adafruit-color-sensors/arduino-code
 
+   VL53L0X sensor code is sourced from the Pololu library. This
+   library can be found at the following link:
+
+   https://github.com/pololu/vl53l0x-arduino
+
 */
 
 #include <Wire.h>
 #include "Adafruit_TCS34725.h"
 #include <Servo.h>
 #include <LiquidCrystal_I2C.h>
+#include <Wire.h>
+#include <VL53L0X.h>
+
+VL53L0X sensor;
 
 #define echoPin 2
 #define trigPin 3
@@ -45,11 +54,13 @@ unsigned long printTime;
 
 int turn;
 int prevTurn;
+int counter;
 
-bool printer = 0;
+bool printer = 1;
 
 void setup(void) {
   Serial.begin(115200);
+  Wire.begin();
 
   lcd.begin();
   lcd.backlight();
@@ -76,6 +87,20 @@ void setup(void) {
   delay(3000);
 
   myServo.attach(SERV);
+
+  sensor.setAddress(0x52);
+  sensor.setTimeout(500);
+  if (!sensor.init())
+  {
+    Serial.println("Failed to detect and initialize sensor!");
+    while (1) {}
+  }
+
+  // Start continuous back-to-back mode (take readings as
+  // fast as possible).  To use continuous timed mode
+  // instead, provide a desired inter-measurement period in
+  // ms (e.g. sensor.startContinuous(100)).
+  sensor.startContinuous();
 }
 
 void loop(void) {
@@ -121,7 +146,7 @@ void loop(void) {
   }
 
   // if cmax equal g then compute h
-  else if (cmax == g) {
+  else if (cmax == gWeight) {
     h = fmod(60 * ((bWeight - rWeight) / diff) + 120, 360);
   }
 
@@ -155,7 +180,7 @@ void loop(void) {
 
   //--------------------------------------------------------------------------------------------------------
   // Read distance extended of lin act by the ultrasonic sensor
-  digitalWrite(trigPin, LOW);
+  /*digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
 
   digitalWrite(trigPin, HIGH);
@@ -168,28 +193,40 @@ void loop(void) {
   Serial.println(" ");
   Serial.print("Distance: "); Serial.print(distance); Serial.println(" ");
 
-  delay(100);
+  delay(100);*/
+  distance = sensor.readRangeContinuousMillimeters() - 63;
+  Serial.print(distance);
+  if (sensor.timeoutOccurred()) { Serial.print(" TIMEOUT"); }
+
+  Serial.println();
   //--------------------------------------------------------------------------------------------------------
   // Map distance detected into 90° rotation of servo
 
-  turn = map(distance, 0, 5.08, 0, 90);
-  myServo.write(turn - prevTurn);
+  turn = map(distance, 0, 50, 0, 90);
+  //myServo.write(-prevTurn);
+  //delay(10);
+  if(turn > 90) turn = 90;
+  myServo.write(turn);
 
   prevTurn = turn;
 
   //--------------------------------------------------------------------------------------------------------
   // Print inputs and outputs to LCD display
   if(trueTime - printTime >= 2000){
+    if(counter == 3) counter = 0;
+    counter++;
     lcd.clear();
     printer = !printer;
     printTime = trueTime;
   }
 
-  if(printer){
+  if(counter == 1){
     lcd.print(String("R: ") + String(r) + String(" G: ") + String(g) + String(" B: ") + String(b)); 
   }
-  else{
-    lcd.print(String("Degrees: ") + String(turn - prevTurn)); 
+  else if(counter == 3){
+    lcd.print(String("Degrees: ") + String(turn)); 
+  } else if(counter == 2){
+    lcd.print(String("Distance: ") + String(distance));
   }
   
 }
