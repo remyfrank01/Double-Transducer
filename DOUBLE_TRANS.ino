@@ -56,6 +56,11 @@ int turn;
 int prevTurn;
 int counter;
 
+int h_print;
+int la_print;
+int dist_print;
+int s_print;
+
 bool printer = 1;
 
 void setup(void) {
@@ -212,7 +217,7 @@ void loop(void) {
 
   //--------------------------------------------------------------------------------------------------------
   // Print inputs and outputs to LCD display
-  if(trueTime - printTime >= 2000){
+  /*if(trueTime - printTime >= 2000){
     if(counter == 3) counter = 0;
     counter++;
     lcd.clear();
@@ -227,6 +232,21 @@ void loop(void) {
     lcd.print(String("Degrees: ") + String(turn)); 
   } else if(counter == 2){
     lcd.print(String("Distance: ") + String(distance));
-  }
+  }*/
+
+  h_print = map(h, 0, 360, 0, 99);
+  la_print = map(runTime, 0, 3000, 0, 99);
+  dist_print = map(distance, 0, 50, 0, 99);
+  s_print = map(turn, 0, 90, 0, 99);
+  
+
+  lcd.home();
+  lcd.print(String("i:") + String(int(h)));
+  lcd.setCursor(6,0);
+  lcd.print(String("m:") + String(la_print));
+  lcd.setCursor(8, 1);
+  lcd.print(String(dist_print));
+  lcd.setCursor(12, 1);
+  lcd.print(String("o:") + String(s_print));
   
 }
