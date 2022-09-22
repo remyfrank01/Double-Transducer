@@ -238,15 +238,15 @@ void loop(void) {
   la_print = map(runTime, 0, 3000, 0, 99);
   dist_print = map(distance, 0, 50, 0, 99);
   s_print = map(turn, 0, 90, 0, 99);
-  
 
-  lcd.home();
-  lcd.print(String("i:") + String(int(h)));
-  lcd.setCursor(6,0);
-  lcd.print(String("m:") + String(la_print));
-  lcd.setCursor(8, 1);
-  lcd.print(String(dist_print));
-  lcd.setCursor(12, 1);
-  lcd.print(String("o:") + String(s_print));
-  
+  if(trueTime - printTime >= 250){
+    lcd.home();
+    lcd.print(String("i:") + String(int(h_print)));
+    lcd.setCursor(6,0);
+    lcd.print(String("m:") + String(la_print));
+    lcd.setCursor(8, 1);
+    lcd.print(String(dist_print));
+    lcd.setCursor(12, 1);
+    lcd.print(String("o:") + String(s_print)); 
+  }
 }
